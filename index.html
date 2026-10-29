@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OVERSEER // Breach</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+  <canvas id="noise" aria-hidden="true"></canvas>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <main class="terminal" id="terminal">
+    <header class="titlebar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="titlebar-name">overseer.exe</span>
+      <span class="titlebar-status" id="status">breach detected</span>
+    </header>
+
+    <section class="screen">
+      <pre class="log" id="log" aria-live="polite"></pre>
+
+      <div class="intercept" id="intercept" hidden>
+        <p class="ai-voice glitch" data-text="You should not be here.">You should not be here.</p>
+      </div>
+
+      <button class="extract" id="extract" type="button" hidden>
+        Extract the fragment
+      </button>
+
+      <div class="reveal" id="reveal" tabindex="-1" hidden>
+        <p class="reveal-label">Recovered memory fragment</p>
+        <p class="clue glitch" data-text="e8" id="clue">e8</p>
+        <p class="reveal-note">Write it down. The system is already trying to forget it.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=2"></script>
+</body>
+</html>
