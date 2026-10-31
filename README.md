@@ -1,7 +1,9 @@
 # EscapeRoom2026
 
-TPEG escape room clue page. Players decode a cipher into this site's URL, press
-**Extract the fragment**, and the "evil AI" terminal reveals the clue `e8`.
+TPEG escape room clue page. Players reach the site by QR code. The "evil AI"
+terminal shows a locked Python script with one blank slot: `core.____()`. Typing
+the decoded cipher word `executeai` (any case) and pressing **Run script**
+reveals the clue `e8`. To change the answer, edit `ANSWER` in `script.js`.
 
 Static files only: `index.html`, `style.css`, `script.js`. No build step.
 

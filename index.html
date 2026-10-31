@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <canvas id="noise" aria-hidden="true"></canvas>
@@ -25,12 +25,21 @@
       <pre class="log" id="log" aria-live="polite"></pre>
 
       <div class="intercept" id="intercept" hidden>
-        <p class="ai-voice glitch" data-text="You should not be here.">You should not be here.</p>
+        <p class="ai-voice glitch" data-text="No. Stop. STOP.">No. Stop. STOP.</p>
       </div>
 
-      <button class="extract" id="extract" type="button" hidden>
-        Extract the fragment
-      </button>
+      <form class="editor" id="editor" autocomplete="off" hidden>
+        <p class="editor-name">overseer_shutdown.py</p>
+        <label class="code" for="cmd"><span class="cm"># terminate the overseer core</span>
+<span class="kw">import</span> overseer
+
+core = overseer.attach(pid=<span class="num">4127</span>)
+core.<span class="slot"><span id="typed"></span><span class="cursor" aria-hidden="true"></span></span>()</label>
+        <input class="cmd" id="cmd" type="text" maxlength="24" aria-label="Missing command"
+               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button class="extract" id="extract" type="submit">Run script</button>
+        <pre class="output" id="output" aria-live="polite"></pre>
+      </form>
 
       <div class="reveal" id="reveal" tabindex="-1" hidden>
         <p class="reveal-label">Recovered memory fragment</p>
@@ -40,6 +49,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=2"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

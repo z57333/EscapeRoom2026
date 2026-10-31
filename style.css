@@ -153,7 +153,84 @@ body {
   text-shadow: 0 0 12px rgba(255, 51, 82, 0.6);
 }
 
-/* Reveal button */
+/* Locked python editor: only the slot is typeable */
+.editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+}
+
+.editor[hidden] { display: none; }
+
+.editor-name {
+  margin: 0 0 -8px;
+  font-size: 0.75rem;
+  color: var(--phosphor-dim);
+}
+
+.code {
+  display: block;
+  margin: 0;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--bone);
+  background: rgba(3, 7, 13, 0.75);
+  border: 1px solid var(--phosphor-dim);
+  border-left: 3px solid var(--phosphor);
+  border-radius: 3px;
+  cursor: text;
+}
+
+.code .cm { color: var(--phosphor-dim); }
+.code .kw { color: var(--phosphor); }
+.code .num { color: #ffb86b; }
+
+.slot {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0 2px;
+  color: var(--phosphor);
+  background: rgba(139, 234, 255, 0.1);
+  border-bottom: 1px dashed var(--phosphor);
+}
+
+.slot .cursor { height: 1.05em; vertical-align: -0.15em; }
+
+.editor.wrong .code { border-color: var(--alarm); animation: shake 0.35s linear; }
+
+/* Real input sits off-canvas; it only feeds keystrokes into the slot */
+.cmd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  font-size: 16px; /* stops iOS zooming on focus */
+}
+
+.output {
+  margin: 0;
+  min-height: 1.5em;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--alarm);
+}
+
+.output .ok { color: var(--bone); }
+
+/* Run button */
 .extract {
   align-self: flex-start;
   font-family: var(--display);
@@ -256,6 +333,7 @@ body {
 
 @media (max-width: 480px) {
   .screen { padding: 18px 16px 22px; }
+  .code { font-size: 0.8rem; padding: 12px; }
   .log { font-size: 0.8rem; }
   .titlebar-status { font-size: 0.7rem; }
 }

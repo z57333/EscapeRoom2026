@@ -113,15 +113,22 @@
   var log = document.getElementById("log");
   var status = document.getElementById("status");
   var intercept = document.getElementById("intercept");
+  var editor = document.getElementById("editor");
+  var input = document.getElementById("cmd");
+  var typed = document.getElementById("typed");
   var button = document.getElementById("extract");
+  var output = document.getElementById("output");
   var reveal = document.getElementById("reveal");
+
+  var ANSWER = "executeai";
+  var isTouch = window.matchMedia("(pointer: coarse)").matches;
 
   var SCRIPT = [
     { text: "> connecting to overseer core...", cls: "" },
-    { text: "> cipher key accepted", cls: "ok" },
-    { text: "> bypassing firewall layer 3 of 3", cls: "" },
+    { text: "> shell access granted", cls: "ok" },
+    { text: "> core process located: pid 4127", cls: "" },
     { text: "! warning: intrusion has been noticed", cls: "err" },
-    { text: "> one memory fragment is exposed. pull it before it is purged.", cls: "ok" }
+    { text: "> finish the shutdown script and run it before you are locked out.", cls: "ok" }
   ];
 
   var cursor = document.createElement("span");
@@ -158,24 +165,102 @@
     });
     return chain.then(function () {
       log.removeAttribute("aria-busy");
-      button.hidden = false;
-      button.focus({ preventScroll: true });
+      cursor.remove();
+      editor.hidden = false;
+      // On touch, a gesture-less focus leaves the keyboard closed; let the tap do it
+      if (!isTouch) input.focus({ preventScroll: true });
     });
   }
 
-  button.addEventListener("click", function () {
+  /* ---------- Locked editor: typing only ever appends at the slot ---------- */
+
+  function pinCaret() {
+    if (composing) return;
+    var end = input.value.length;
+    if (input.selectionStart !== end || input.selectionEnd !== end) input.setSelectionRange(end, end);
+  }
+
+  input.addEventListener("keydown", function (e) {
+    if (/^(Arrow|Home|End|Page)/.test(e.key)) e.preventDefault();
+  });
+
+  function clean(v) { return v.replace(/[^A-Za-z0-9_]/g, ""); }
+
+  // Rewriting value mid-IME-composition duplicates text on Gboard, so only mirror then
+  var composing = false;
+
+  function sync() {
+    var c = clean(input.value);
+    typed.textContent = c;
+    if (composing) return;
+    if (c !== input.value) input.value = c;
+    pinCaret();
+  }
+
+  input.addEventListener("compositionstart", function () { composing = true; });
+  input.addEventListener("compositionend", function () { composing = false; sync(); });
+  input.addEventListener("input", function () {
+    output.textContent = "";
+    sync();
+  });
+
+  // Tapping the code re-focuses so the mobile keyboard always opens
+  editor.querySelector(".code").addEventListener("click", function (e) {
+    e.preventDefault();
+    if (input.disabled) return;
+    input.blur();
+    input.focus({ preventScroll: true });
+  });
+
+  ["select", "click", "focus", "keyup", "beforeinput"].forEach(function (ev) {
+    input.addEventListener(ev, pinCaret);
+  });
+  document.addEventListener("selectionchange", function () {
+    if (document.activeElement === input) pinCaret();
+  });
+
+  function say(text, cls) {
+    var span = document.createElement("span");
+    if (cls) span.className = cls;
+    span.textContent = text + "\n";
+    output.appendChild(span);
+  }
+
+  function reject(cmd) {
+    output.textContent = "";
+    if (!cmd) say("SyntaxError: invalid syntax");
+    else say("AttributeError: 'Core' object has no attribute '" + cmd + "'");
+    say("[OVERSEER] Is that all you have?");
+    editor.classList.remove("wrong");
+    void editor.offsetWidth; // restart the shake animation
+    editor.classList.add("wrong");
+    input.value = "";
+    typed.textContent = "";
+    if (!isTouch) input.focus({ preventScroll: true });
+  }
+
+  editor.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (button.disabled) return;
+    var cmd = clean(input.value);
+    if (cmd.toLowerCase() !== ANSWER) { reject(cmd); return; }
+
     button.disabled = true;
-    status.textContent = "purge in progress";
+    input.disabled = true;
+    output.textContent = "";
+    say(">>> core." + ANSWER + "()", "ok");
+    say(">>> terminating pid 4127...", "ok");
+    status.textContent = "core terminating";
     terminal.classList.add("alarm");
     if (!reduceMotion) terminal.classList.add("shake");
     intercept.hidden = false;
 
-    wait(1100).then(function () {
+    wait(1400).then(function () {
       terminal.classList.remove("shake", "alarm");
       intercept.hidden = true;
-      button.hidden = true;
+      editor.hidden = true;
       log.hidden = true;
-      status.textContent = "fragment recovered";
+      status.textContent = "core offline";
       reveal.hidden = false;
       reveal.focus({ preventScroll: true });
       if (!reduceMotion) reveal.classList.add("show");
