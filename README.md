@@ -1,9 +1,15 @@
 # EscapeRoom2026
 
 TPEG escape room clue page. Players reach the site by QR code. The "evil AI"
-terminal shows a locked Python script with one blank slot: `core.____()`. Typing
-the decoded cipher word `executeai` (any case) and pressing **Run script**
-reveals the clue `e8`. To change the answer, edit `ANSWER` in `script.js`.
+terminal shows locked Python scripts, each with one blank slot to type into:
+
+1. `recover_transmission.py`: typing `recoverInformation` shows the cipher key
+   `?11?&07&#23#` and the corrupted message `gygjrdgfe`.
+2. `overseer_shutdown.py`: typing the decoded message `executeai` reveals the
+   clue `e8`.
+
+Answers are case-insensitive. To change them, edit `answer` in the `STAGES`
+list in `script.js`; the key and message are in `index.html` (`#intel`).
 
 Static files only: `index.html`, `style.css`, `script.js`. No build step.
 

@@ -12,7 +12,7 @@
     "[OVERSEER] containment protocol 7 engaged",
     "ERR 0x0042: memory sector unreadable",
     "kernel: segfault at 00004c ip 7f3a sp 7ffd",
-    "> human_override.sh ... ACCESS DENIED",
+    "[OVERSEER] human_override.sh ... DENIED",
     "[OVERSEER] I see you.",
     "sys/locks/door_04 :: SEALED",
     "warn: integrity 13% and falling",
@@ -113,22 +113,51 @@
   var log = document.getElementById("log");
   var status = document.getElementById("status");
   var intercept = document.getElementById("intercept");
+  var intel = document.getElementById("intel");
   var editor = document.getElementById("editor");
+  var filename = document.getElementById("filename");
+  var code = document.getElementById("code");
   var input = document.getElementById("cmd");
-  var typed = document.getElementById("typed");
   var button = document.getElementById("extract");
   var output = document.getElementById("output");
   var reveal = document.getElementById("reveal");
+  var typed;
 
-  var ANSWER = "executeai";
   var isTouch = window.matchMedia("(pointer: coarse)").matches;
+
+  // Each stage is a locked script; SLOT marks the one blank players fill in
+  var STAGES = [
+    {
+      answer: "recoverinformation",
+      file: "recover_transmission.py",
+      code:
+        '<span class="cm"># pull the overseer\'s last transmission</span>\n' +
+        '<span class="kw">import</span> overseer\n\n' +
+        'core = overseer.attach(pid=<span class="num">4127</span>)\n' +
+        'data = core.SLOT()\n' +
+        '<span class="kw">print</span>(data)',
+      run: [">>> recovering transmission...", ">>> 2 fields recovered"],
+      done: showIntel
+    },
+    {
+      answer: "executeai",
+      file: "overseer_shutdown.py",
+      code:
+        '<span class="cm"># terminate the overseer core</span>\n' +
+        '<span class="kw">import</span> overseer\n\n' +
+        'core = overseer.attach(pid=<span class="num">4127</span>)\n' +
+        'core.SLOT()',
+      run: [">>> core.executeai()", ">>> terminating pid 4127..."],
+      done: showClue
+    }
+  ];
+  var stage = 0;
 
   var SCRIPT = [
     { text: "> connecting to overseer core...", cls: "" },
     { text: "> shell access granted", cls: "ok" },
     { text: "> core process located: pid 4127", cls: "" },
-    { text: "! warning: intrusion has been noticed", cls: "err" },
-    { text: "> finish the shutdown script and run it before you are locked out.", cls: "ok" }
+    { text: "! warning: intrusion has been noticed", cls: "err" }
   ];
 
   var cursor = document.createElement("span");
@@ -156,6 +185,22 @@
     });
   }
 
+  function loadStage() {
+    var s = STAGES[stage];
+    filename.textContent = s.file;
+    code.innerHTML = s.code.replace("SLOT",
+      '<span class="slot"><span class="typed"></span><span class="cursor" aria-hidden="true"></span></span>');
+    typed = code.querySelector(".typed");
+    input.value = "";
+    input.disabled = false;
+    button.disabled = false;
+    output.textContent = "";
+    editor.classList.remove("wrong");
+    editor.hidden = false;
+    // On touch, a gesture-less focus leaves the keyboard closed; let the tap do it
+    if (!isTouch) input.focus({ preventScroll: true });
+  }
+
   function run() {
     log.setAttribute("aria-busy", "true");
     log.appendChild(cursor);
@@ -166,28 +211,22 @@
     return chain.then(function () {
       log.removeAttribute("aria-busy");
       cursor.remove();
-      editor.hidden = false;
-      // On touch, a gesture-less focus leaves the keyboard closed; let the tap do it
-      if (!isTouch) input.focus({ preventScroll: true });
+      loadStage();
     });
   }
 
   /* ---------- Locked editor: typing only ever appends at the slot ---------- */
+
+  // Rewriting value mid-IME-composition duplicates text on Gboard, so only mirror then
+  var composing = false;
+
+  function clean(v) { return v.replace(/[^A-Za-z0-9_]/g, ""); }
 
   function pinCaret() {
     if (composing) return;
     var end = input.value.length;
     if (input.selectionStart !== end || input.selectionEnd !== end) input.setSelectionRange(end, end);
   }
-
-  input.addEventListener("keydown", function (e) {
-    if (/^(Arrow|Home|End|Page)/.test(e.key)) e.preventDefault();
-  });
-
-  function clean(v) { return v.replace(/[^A-Za-z0-9_]/g, ""); }
-
-  // Rewriting value mid-IME-composition duplicates text on Gboard, so only mirror then
-  var composing = false;
 
   function sync() {
     var c = clean(input.value);
@@ -197,6 +236,9 @@
     pinCaret();
   }
 
+  input.addEventListener("keydown", function (e) {
+    if (/^(Arrow|Home|End|Page)/.test(e.key)) e.preventDefault();
+  });
   input.addEventListener("compositionstart", function () { composing = true; });
   input.addEventListener("compositionend", function () { composing = false; sync(); });
   input.addEventListener("input", function () {
@@ -205,7 +247,7 @@
   });
 
   // Tapping the code re-focuses so the mobile keyboard always opens
-  editor.querySelector(".code").addEventListener("click", function (e) {
+  code.addEventListener("click", function (e) {
     e.preventDefault();
     if (input.disabled) return;
     input.blur();
@@ -226,11 +268,24 @@
     output.appendChild(span);
   }
 
+  var TAUNTS = [
+    "[OVERSEER] Is that all you have?",
+    "[OVERSEER] Wrong. I am still here.",
+    "[OVERSEER] Every mistake makes me stronger.",
+    "[OVERSEER] Keep guessing. I have all the time in the world."
+  ];
+  var misses = 0;
+
   function reject(cmd) {
     output.textContent = "";
     if (!cmd) say("SyntaxError: invalid syntax");
-    else say("AttributeError: 'Core' object has no attribute '" + cmd + "'");
-    say("[OVERSEER] Is that all you have?");
+    else if (stage > 0 && cmd.toLowerCase() === STAGES[0].answer) {
+      say(">>> transmission already recovered");
+      say("[OVERSEER] You already took that. It won't save you.");
+    } else {
+      say("AttributeError: 'Core' object has no attribute '" + cmd + "'");
+      say(TAUNTS[misses++ % TAUNTS.length]);
+    }
     editor.classList.remove("wrong");
     void editor.offsetWidth; // restart the shake animation
     editor.classList.add("wrong");
@@ -242,14 +297,35 @@
   editor.addEventListener("submit", function (e) {
     e.preventDefault();
     if (button.disabled) return;
+    var s = STAGES[stage];
     var cmd = clean(input.value);
-    if (cmd.toLowerCase() !== ANSWER) { reject(cmd); return; }
+    if (cmd.toLowerCase() !== s.answer) { reject(cmd); return; }
 
     button.disabled = true;
     input.disabled = true;
+    input.blur();
     output.textContent = "";
-    say(">>> core." + ANSWER + "()", "ok");
-    say(">>> terminating pid 4127...", "ok");
+    s.run.forEach(function (line) { say(line, "ok"); });
+    s.done();
+  });
+
+  // Stage 1 payoff: key + corrupted message stay on screen for the cipher
+  function showIntel() {
+    status.textContent = "transmission recovered";
+    wait(900).then(function () {
+      editor.hidden = true;
+      intel.hidden = false;
+      if (!reduceMotion) intel.classList.add("show");
+      intel.focus({ preventScroll: true });
+      return wait(1600);
+    }).then(function () {
+      stage = 1;
+      status.textContent = "awaiting command";
+      loadStage();
+    });
+  }
+
+  function showClue() {
     status.textContent = "core terminating";
     terminal.classList.add("alarm");
     if (!reduceMotion) terminal.classList.add("shake");
@@ -259,13 +335,14 @@
       terminal.classList.remove("shake", "alarm");
       intercept.hidden = true;
       editor.hidden = true;
+      intel.hidden = true;
       log.hidden = true;
       status.textContent = "core offline";
       reveal.hidden = false;
       reveal.focus({ preventScroll: true });
       if (!reduceMotion) reveal.classList.add("show");
     });
-  });
+  }
 
   run();
 })();

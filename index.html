@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <canvas id="noise" aria-hidden="true"></canvas>
@@ -28,13 +28,19 @@
         <p class="ai-voice glitch" data-text="No. Stop. STOP.">No. Stop. STOP.</p>
       </div>
 
-      <form class="editor" id="editor" autocomplete="off" hidden>
-        <p class="editor-name">overseer_shutdown.py</p>
-        <label class="code" for="cmd"><span class="cm"># terminate the overseer core</span>
-<span class="kw">import</span> overseer
+      <div class="intel" id="intel" tabindex="-1" hidden>
+        <p class="intel-head">Recovered transmission</p>
+        <dl class="intel-data">
+          <div><dt>Key</dt><dd class="intel-key">?11?&amp;07&amp;#23#</dd></div>
+          <div><dt>Message</dt><dd class="intel-msg">gygjrdgfe</dd></div>
+        </dl>
+        <p class="intel-warn">! transmission corrupted: the message is scrambled</p>
+        <p class="intel-note">&gt; Use the key to unscramble the message. The decoded word is the command that shuts the Overseer down. Write both down exactly.</p>
+      </div>
 
-core = overseer.attach(pid=<span class="num">4127</span>)
-core.<span class="slot"><span id="typed"></span><span class="cursor" aria-hidden="true"></span></span>()</label>
+      <form class="editor" id="editor" autocomplete="off" hidden>
+        <p class="editor-name" id="filename"></p>
+        <label class="code" id="code" for="cmd"></label>
         <input class="cmd" id="cmd" type="text" maxlength="24" aria-label="Missing command"
                autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
         <button class="extract" id="extract" type="submit">Run script</button>
@@ -49,6 +55,6 @@ core.<span class="slot"><span id="typed"></span><span class="cursor" aria-hidden
     </section>
   </main>
 
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>

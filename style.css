@@ -230,6 +230,52 @@ body {
 
 .output .ok { color: var(--bone); }
 
+/* Recovered key + corrupted message: must stay crisp and copyable */
+.intel {
+  padding: 14px 16px;
+  border: 1px solid var(--phosphor-dim);
+  border-left: 3px solid #ffb86b;
+  border-radius: 3px;
+  background: rgba(3, 7, 13, 0.75);
+  outline: none;
+}
+
+.intel.show { animation: materialize 0.7s ease-out; }
+
+.intel-head {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--phosphor-dim);
+}
+
+.intel-data { margin: 0; display: grid; gap: 8px; }
+.intel-data div { display: grid; grid-template-columns: 5.5em 1fr; align-items: baseline; gap: 10px; }
+.intel-data dt { font-size: 0.85rem; color: var(--phosphor); }
+.intel-data dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: clamp(1.15rem, 5vw, 1.5rem);
+  letter-spacing: 0.12em;
+  color: var(--bone);
+  word-break: break-all;
+  user-select: all;
+}
+.intel-key { color: #ffb86b !important; white-space: nowrap; }
+
+.intel-warn {
+  margin: 12px 0 2px;
+  font-size: 0.85rem;
+  color: var(--alarm);
+}
+
+.intel-note {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--phosphor);
+}
+
 /* Run button */
 .extract {
   align-self: flex-start;
