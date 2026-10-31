@@ -298,27 +298,15 @@ body {
 .extract:disabled { opacity: 0.4; cursor: progress; }
 
 /* The clue */
-.reveal { text-align: center; padding-top: 4px; outline: none; }
-
-.reveal-label {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--phosphor-dim);
-}
+.reveal { text-align: center; padding: 24px 0; outline: none; }
 
 .clue {
-  margin: 4px 0 6px;
+  margin: 0;
   font-family: var(--display);
   font-size: clamp(7rem, 32vw, 12rem);
   line-height: 0.9;
   color: var(--bone);
   text-shadow: 0 0 18px rgba(139, 234, 255, 0.8), 0 0 60px rgba(139, 234, 255, 0.35);
-}
-
-.reveal-note {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--phosphor);
 }
 
 .reveal.show { animation: materialize 0.9s ease-out; }

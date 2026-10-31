@@ -167,22 +167,52 @@
     return new Promise(function (r) { setTimeout(r, reduceMotion ? 0 : ms); });
   }
 
-  function typeLine(line) {
-    var span = document.createElement("span");
-    if (line.cls) span.className = line.cls;
-    log.insertBefore(span, cursor);
+  // Types text into el with the shared cursor trailing it. scramble makes each
+  // character flicker through junk glyphs first, so it reads as live decryption.
+  function typeInto(el, text, scramble) {
+    el.textContent = "";
+    var glitchy = el.classList.contains("glitch");
     if (reduceMotion) {
-      span.textContent = line.text + "\n";
+      el.textContent = text;
+      if (glitchy) el.dataset.text = text;
       return Promise.resolve();
     }
-    var i = 0;
+    var node = document.createTextNode("");
+    el.appendChild(node);
+    el.appendChild(cursor);
+    var i = 0, flicks = 0;
     return new Promise(function (resolve) {
       (function tick() {
-        span.textContent = line.text.slice(0, ++i);
-        if (i < line.text.length) setTimeout(tick, 14 + rand(26));
-        else { span.textContent += "\n"; resolve(); }
+        if (scramble && flicks < 3 && text[i] !== " ") {
+          node.data = text.slice(0, i) + GLYPHS[rand(GLYPHS.length)];
+          flicks++;
+          setTimeout(tick, 18);
+          return;
+        }
+        flicks = 0;
+        node.data = text.slice(0, ++i);
+        if (glitchy) el.dataset.text = node.data;
+        if (i < text.length) setTimeout(tick, 14 + rand(26));
+        else resolve();
       })();
     });
+  }
+
+  // Types lines one after another as new spans in container
+  function typeLines(container, lines, gap) {
+    var chain = Promise.resolve();
+    lines.forEach(function (line) {
+      chain = chain.then(function () {
+        var span = document.createElement("span");
+        if (line.cls) span.className = line.cls;
+        container.appendChild(span);
+        return typeInto(span, line.text).then(function () {
+          span.appendChild(document.createTextNode("\n"));
+          return wait(gap);
+        });
+      });
+    });
+    return chain;
   }
 
   function loadStage() {
@@ -204,11 +234,7 @@
   function run() {
     log.setAttribute("aria-busy", "true");
     log.appendChild(cursor);
-    var chain = Promise.resolve();
-    SCRIPT.forEach(function (line) {
-      chain = chain.then(function () { return typeLine(line); }).then(function () { return wait(260); });
-    });
-    return chain.then(function () {
+    return typeLines(log, SCRIPT, 260).then(function () {
       log.removeAttribute("aria-busy");
       cursor.remove();
       loadStage();
@@ -305,19 +331,36 @@
     input.disabled = true;
     input.blur();
     output.textContent = "";
-    s.run.forEach(function (line) { say(line, "ok"); });
-    s.done();
+    var lines = s.run.map(function (t) { return { text: t, cls: "ok" }; });
+    typeLines(output, lines, 200).then(s.done);
   });
+
+  // Snapshot the transmission panel's text so it can be typed out on reveal
+  var intelParts = Array.prototype.map.call(
+    intel.querySelectorAll(".intel-head, dt, dd, .intel-warn, .intel-note"),
+    function (el) {
+      var part = { el: el, text: el.textContent, scramble: el.tagName === "DD" };
+      el.textContent = "";
+      return part;
+    });
 
   // Stage 1 payoff: key + corrupted message stay on screen for the cipher
   function showIntel() {
     status.textContent = "transmission recovered";
-    wait(900).then(function () {
+    wait(500).then(function () {
       editor.hidden = true;
       intel.hidden = false;
       if (!reduceMotion) intel.classList.add("show");
       intel.focus({ preventScroll: true });
-      return wait(1600);
+      var chain = wait(500);
+      intelParts.forEach(function (p) {
+        chain = chain.then(function () { return typeInto(p.el, p.text, p.scramble); })
+          .then(function () { return wait(p.scramble ? 350 : 150); });
+      });
+      return chain;
+    }).then(function () {
+      cursor.remove();
+      return wait(700);
     }).then(function () {
       stage = 1;
       status.textContent = "awaiting command";
@@ -330,8 +373,11 @@
     terminal.classList.add("alarm");
     if (!reduceMotion) terminal.classList.add("shake");
     intercept.hidden = false;
+    var voice = intercept.querySelector(".ai-voice");
 
-    wait(1400).then(function () {
+    typeInto(voice, voice.textContent).then(function () {
+      return wait(900);
+    }).then(function () {
       terminal.classList.remove("shake", "alarm");
       intercept.hidden = true;
       editor.hidden = true;
